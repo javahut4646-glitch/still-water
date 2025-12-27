@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Still Water</title>
+
+<style>
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  overflow: hidden;
+  background: #0f1c24;
+  transition: background-color 8s linear;
+  touch-action: manipulation;
+}
+
+canvas {
+  display: block;
+}
+</style>
+</head>
+
+<body>
+<canvas id="c"></canvas>
+
+<script>
+const canvas = document.getElementById("c");
+const ctx = canvas.getContext("2d");
+
+function resize() {
+  canvas.width = innerWidth;
+  canvas.height = innerHeight;
+}
+resize();
+addEventListener("resize", resize);
+
+let ripples = [];
+let lastTouch = Date.now();
+
+const sound = new Audio(
+"data:audio/wav;base64,UklGRlIAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YSgAAAAA/////wAAAP///wAAAP///wAAAP///wAAAP///wAA"
+);
+sound.volume = 0.25;
+
+addEventListener("pointerdown", e => {
+  const r = canvas.getBoundingClientRect();
+  ripples.push({
+    x: e.clientX - r.left,
+    y: e.clientY - r.top,
+    radius: 0,
+    alpha: 0.6
+  });
+
+  lastTouch = Date.now();
+  document.body.style.backgroundColor = "#0f1c24";
+
+  sound.currentTime = 0;
+  sound.play().catch(()=>{});
+
+  if (navigator.vibrate) navigator.vibrate(40);
+});
+
+function draw() {
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+
+  for (let i = ripples.length - 1; i >= 0; i--) {
+    const p = ripples[i];
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.radius, 0, Math.PI*2);
+    ctx.strokeStyle = `rgba(200,220,235,${p.alpha})`;
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    p.radius += 0.5;
+    p.alpha -= 0.0025;
+
+    if (p.alpha <= 0) ripples.splice(i,1);
+  }
+
+  if (Date.now() - lastTouch > 8000) {
+    document.body.style.backgroundColor = "#05090d";
+  }
+
+  requestAnimationFrame(draw);
+}
+draw();
+</script>
+</body>
+</html>
