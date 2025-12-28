@@ -1,13 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Unfixed Poem</title>
 
-<styl<style>
-body {
+<style>
+html, body {
   margin: 0;
+  padding: 0;
+  height: 100%;
   background: #0b0f14;
   color: #cfd6df;
   font-family: serif;
@@ -19,121 +21,79 @@ body {
   text-align: center;
   font-size: 1.4em;
   line-height: 1.8;
-  transition: opacity 1.5s ease;
 }
-</style>e>
-  html, body {
-    margin: 0;
-    padding: 0;
-    background: #0e0e11;
-    color: #e6e6ea;
-    font-family: serif;
-    overflow: hidden;
-    height: 100%;
-  }
-
-  .word {
-    position: absolute;
-    cursor: grab;
-    user-select: none;
-    font-size: 18px;
-    opacity: 0.85;
-    transition: opacity 2s;
-  }
-
-  .word:active {
-    cursor: grabbing;
-    opacity: 1;
-  }
-
-  .hint {
-    position: fixed;
-    bottom: 16px;
-    width: 100%;
-    text-align: center;
-    font-size: 12px;
-    opacity: 0.4;
-    pointer-events: none;
-  }
+.word {
+  display: inline-block;
+  margin: 4px;
+  cursor: pointer;
+  opacity: 0.85;
+}
+.word:active {
+  opacity: 1;
+}
+.hint {
+  position: fixed;
+  bottom: 16px;
+  width: 100%;
+  text-align: center;
+  font-size: 12px;
+  opacity: 0.4;
+}
 </style>
 </head>
+
 <body>
 
-<div class="hint">touch and move words · listen</div>
+<div id="poem">
+Tell me who you are now<br>
+Tell me what you do<br>
+Tell me if this light shining on you is to be true
+</div>
 
-<script>let audioContext;
+<div class="hint">tap a word</div>
+
+<script>
+let audio;
 let unlocked = false;
 
 function unlockAudio() {
   if (unlocked) return;
-  audioContext = new (window.AudioContext || window.webkitAudioContext)();
-  audioContext.resume();
+  audio = new (window.AudioContext || window.webkitAudioContext)();
+  audio.resume();
   unlocked = true;
 }
 
 document.addEventListener("pointerdown", unlockAudio, { once: true });
-/* ===== Poem text ===== */
-const poem = `
-Tell me who you are now
-Tell me what you do
-Tell me if this light shining on you is to be true
-When all the world goes silent and it is just you and I
-Tell me all about you as we watch the world go by
-Each time you share your joy
-I will laugh and smile along
-Each time that you share your burdens
-I will gladly take them on
-For with you life is trouble free
-I'll be damned if there is anywhere that I'd rather be
-Tell me about your future
-Tell me do we grow old and frail
-Please don't be afraid to tell me when I fail
-Give me everything you got and I promise to match your pace
-I'll do anything to see that smile upon your face
-The day will come when one of us will pass
-But I promise it won't be the last
-`;
 
-/* ===== Audio setup ===== */
-const AudioContext = window.AudioContext || window.webkitAudioContext;
-const audioCtx = new AudioContext();
+function playTone(freq) {
+  if (!audio) return;
+  const osc = audio.createOscillator();
+  const gain = audio.createGain();
+  osc.frequency.value = freq;
+  osc.type = "sine";
+  gain.gain.setValueAtTime(0.08, audio.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.001, audio.currentTime + 0.8);
+  osc.connect(gain);
+  gain.connect(audio.destination);
+  osc.start();
+  osc.stop(audio.currentTime + 0.8);
+}
 
-function createTone(y) {
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Still Water</title>
+const poem = document.getElementById("poem");
+const words = poem.innerText.split(/\s+/);
+poem.innerHTML = "";
 
-<style>
-  body {
-    margin: 0;
-    min-height: 100vh;
-    background: radial-gradient(circle at top, #101620, #05070b);
-    color: #cfd6df;
-    font-family: serif;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
+words.forEach((w, i) => {
+  const span = document.createElement("span");
+  span.className = "word";
+  span.textContent = w + " ";
+  span.addEventListener("pointerdown", e => {
+    e.stopPropagation();
+    playTone(300 + i * 22);
+  });
+  poem.appendChild(span);
+});
+</script>
 
-  #poem {
-    max-width: 600px;
-    text-align: center;
-    font-size: 1.4em;
-    line-height: 1.8;
-    padding: 20px;
-    transition: opacity 1.5s ease;
-  }
-
-  span.word {
-    display: inline-block;
-    margin: 4px;
-    cursor: grab;
-    transition: transform 0.6s ease, opacity 0.6s ease;
-  }
-
-  span.word:hover {
-    transform: translateY(-4px);
-    opacity
+</body>
+</html>
