@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Still Water</title>
+
+<style>
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background: radial-gradient(circle at top, #101620, #05070b);
+    color: #cfd6df;
+    font-family: serif;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  #poem {
+    max-width: 600px;
+    text-align: center;
+    font-size: 1.4em;
+    line-height: 1.8;
+    padding: 20px;
+    transition: opacity 1.5s ease;
+  }
+
+  span.word {
+    display: inline-block;
+    margin: 4px;
+    cursor: grab;
+    transition: transform 0.6s ease, opacity 0.6s ease;
+  }
+
+  span.word:hover {
+    transform: translateY(-4px);
+    opacity: 0.85;
+  }
+</style>
+</head>
+
+<body>
+
+<div id="poem">
+still water holds  
+the weight of unsaid things  
+waiting
+</div>
+
+<script>
+/* -------------------------
+   AUDIO UNLOCK (MOBILE SAFE)
+-------------------------- */
+let audioContext;
+let audioUnlocked = false;
+
+function unlockAudio() {
+  if (audioUnlocked) return;
+  audioContext = new (window.AudioContext || window.webkitAudioContext)();
+  audioContext.resume();
+  audioUnlocked = true;
+}
+
+document.addEventListener("pointerdown", unlockAudio, { once: true });
+
+/* -------------------------
+   SOUND FUNCTION
+-------------------------- */
+function playWordSound(pitch = 440) {
+  if (!audioContext) return;
+
+  const osc = audioContext.createOscillator();
+  const gain = audioContext.createGain();
+
+  osc.type = "sine";
+  osc.frequency.value = pitch;
+
+  gain.gain.setValueAtTime(0.08, audioContext.currentTime);
+  gain.gain.exponentialRampToValueAtTime(
+    0.001,
+    audioContext.currentTime + 0.7
+  );
+
+  osc.connect(gain);
+  gain.connect(audioContext.destination);
+
+  osc.start();
+  osc.stop(audioContext.currentTime + 0.7);
+}
+
+/* -------------------------
+   POEM TRANSFORMATION
+-------------------------- */
+let transformed = false;
+
+document.addEventListener("pointerdown", () => {
+  if (transformed) return;
+  transformed = true;
+  transformPoem();
+});
+
+function transformPoem() {
+  const poem = document.getElementById("poem");
+  const text = poem.innerText;
+  const words = text.split(/\s+/);
+
+  poem.innerHTML = "";
+
+  words.forEach((word, index) => {
+    const span = document.createElement("span");
+    span.className = "word";
+    span.textContent = word + " ";
+
+    // pitch gently varies per word
+    const pitch = 320 + index * 18;
+
+    span.addEventListener("pointerdown", (e) => {
+      e.stopPropagation();
+      playWordSound(pitch);
+    });
+
+    poem.appendChild(span);
+  });
+}
+</script>
+
+</body>
+</html>
