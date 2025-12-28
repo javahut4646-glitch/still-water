@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Unfixed Poem</title>
+
+<style>
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: #0e0e11;
+    color: #e6e6ea;
+    font-family: serif;
+    overflow: hidden;
+    height: 100%;
+  }
+
+  .word {
+    position: absolute;
+    cursor: grab;
+    user-select: none;
+    font-size: 18px;
+    opacity: 0.85;
+    transition: opacity 2s;
+  }
+
+  .word:active {
+    cursor: grabbing;
+    opacity: 1;
+  }
+
+  .hint {
+    position: fixed;
+    bottom: 16px;
+    width: 100%;
+    text-align: center;
+    font-size: 12px;
+    opacity: 0.4;
+    pointer-events: none;
+  }
+</style>
+</head>
+<body>
+
+<div class="hint">touch and move words · listen</div>
+
+<script>
+/* ===== Poem text ===== */
+const poem = `
+Tell me who you are now
+Tell me what you do
+Tell me if this light shining on you is to be true
+When all the world goes silent and it is just you and I
+Tell me all about you as we watch the world go by
+Each time you share your joy
+I will laugh and smile along
+Each time that you share your burdens
+I will gladly take them on
+For with you life is trouble free
+I'll be damned if there is anywhere that I'd rather be
+Tell me about your future
+Tell me do we grow old and frail
+Please don't be afraid to tell me when I fail
+Give me everything you got and I promise to match your pace
+I'll do anything to see that smile upon your face
+The day will come when one of us will pass
+But I promise it won't be the last
+`;
+
+/* ===== Audio setup ===== */
+const AudioContext = window.AudioContext || window.webkitAudioContext;
+const audioCtx = new AudioContext();
+
+function createTone(y) {
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+
+  const freq = 180 + (window.innerHeight - y) * 0.4;
+  osc.frequency.value = freq;
+  osc.type = "sine";
+
+  gain.gain.value = 0;
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+
+  osc.start();
+
+  gain.gain.linearRampToValueAtTime(0.04, audioCtx.currentTime + 1.2);
+
+  return { osc, gain };
+}
+
+/* ===== Create words ===== */
+const words = poem
+  .replace(/\n/g, " ")
+  .split(" ")
+  .filter(w => w.trim().length);
+
+words.forEach((text, i) => {
+  const el = document.createElement("div");
+  el.className = "word";
+  el.textContent = text;
+
+  el.style.left = Math.random() * (window.innerWidth - 80) + "px";
+  el.style.top = Math.random() * (window.innerHeight - 80) + "px";
+
+  document.body.appendChild(el);
+
+  let tone = null;
+  let dragging = false;
+  let offsetX = 0;
+  let offsetY = 0;
+
+  const start = (x, y) => {
+    if (audioCtx.state === "suspended") audioCtx.resume();
+    dragging = true;
+    offsetX = x - el.offsetLeft;
+    offsetY = y - el.offsetTop;
+    tone = createTone(y);
+  };
+
+  const move = (x, y) => {
+    if (!dragging) return;
+    el.style.left = x - offsetX + "px";
+    el.style.top = y - offsetY + "px";
+    tone.osc.frequency.setTargetAtTime(
+      180 + (window.innerHeight - y) * 0.4,
+      audioCtx.currentTime,
+      0.05
+    );
+  };
+
+  const end = () => {
+    if (!dragging) return;
+    dragging = false;
+    tone.gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 2);
+    setTimeout(() => tone.osc.stop(), 2500);
+  };
+
+  el.addEventListener("mousedown", e => start(e.clientX, e.clientY));
+  window.addEventListener("mousemove", e => move(e.clientX, e.clientY));
+  window.addEventListener("mouseup", end);
+
+  el.addEventListener("touchstart", e => {
+    const t = e.touches[0];
+    start(t.clientX, t.clientY);
+  });
+  window.addEventListener("touchmove", e => {
+    const t = e.touches[0];
+    if (t) move(t.clientX, t.clientY);
+  });
+  window.addEventListener("touchend", end);
+});
+</script>
+
+</body>
+</html>
