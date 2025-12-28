@@ -99,86 +99,41 @@ const AudioContext = window.AudioContext || window.webkitAudioContext;
 const audioCtx = new AudioContext();
 
 function createTone(y) {
-  const osc = audioCtx.createOscillator();
-  const gain = audioCtx.createGain();
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Still Water</title>
 
-  const freq = 180 + (window.innerHeight - y) * 0.4;
-  osc.frequency.value = freq;
-  osc.type = "sine";
+<style>
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background: radial-gradient(circle at top, #101620, #05070b);
+    color: #cfd6df;
+    font-family: serif;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
 
-  gain.gain.value = 0;
-  osc.connect(gain);
-  gain.connect(audioCtx.destination);
+  #poem {
+    max-width: 600px;
+    text-align: center;
+    font-size: 1.4em;
+    line-height: 1.8;
+    padding: 20px;
+    transition: opacity 1.5s ease;
+  }
 
-  osc.start();
+  span.word {
+    display: inline-block;
+    margin: 4px;
+    cursor: grab;
+    transition: transform 0.6s ease, opacity 0.6s ease;
+  }
 
-  gain.gain.linearRampToValueAtTime(0.04, audioCtx.currentTime + 1.2);
-
-  return { osc, gain };
-}
-
-/* ===== Create words ===== */
-const words = poem
-  .replace(/\n/g, " ")
-  .split(" ")
-  .filter(w => w.trim().length);
-
-words.forEach((text, i) => {
-  const el = document.createElement("div");
-  el.className = "word";
-  el.textContent = text;
-
-  el.style.left = Math.random() * (window.innerWidth - 80) + "px";
-  el.style.top = Math.random() * (window.innerHeight - 80) + "px";
-
-  document.body.appendChild(el);
-
-  let tone = null;
-  let dragging = false;
-  let offsetX = 0;
-  let offsetY = 0;
-
-  const start = (x, y) => {
-    if (audioCtx.state === "suspended") audioCtx.resume();
-    dragging = true;
-    offsetX = x - el.offsetLeft;
-    offsetY = y - el.offsetTop;
-    tone = createTone(y);
-  };
-
-  const move = (x, y) => {
-    if (!dragging) return;
-    el.style.left = x - offsetX + "px";
-    el.style.top = y - offsetY + "px";
-    tone.osc.frequency.setTargetAtTime(
-      180 + (window.innerHeight - y) * 0.4,
-      audioCtx.currentTime,
-      0.05
-    );
-  };
-
-  const end = () => {
-    if (!dragging) return;
-    dragging = false;
-    tone.gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 2);
-    setTimeout(() => tone.osc.stop(), 2500);
-  };
-
-  el.addEventListener("mousedown", e => start(e.clientX, e.clientY));
-  window.addEventListener("mousemove", e => move(e.clientX, e.clientY));
-  window.addEventListener("mouseup", end);
-
-  el.addEventListener("touchstart", e => {
-    const t = e.touches[0];
-    start(t.clientX, t.clientY);
-  });
-  window.addEventListener("touchmove", e => {
-    const t = e.touches[0];
-    if (t) move(t.clientX, t.clientY);
-  });
-  window.addEventListener("touchend", end);
-});
-</script>
-
-</body>
-</html>
+  span.word:hover {
+    transform: translateY(-4px);
+    opacity
