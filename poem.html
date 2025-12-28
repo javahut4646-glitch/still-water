@@ -5,7 +5,23 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Unfixed Poem</title>
 
-<style>
+<styl<style>
+body {
+  margin: 0;
+  background: #0b0f14;
+  color: #cfd6df;
+  font-family: serif;
+}
+
+#poem {
+  max-width: 600px;
+  margin: 20vh auto;
+  text-align: center;
+  font-size: 1.4em;
+  line-height: 1.8;
+  transition: opacity 1.5s ease;
+}
+</style>e>
   html, body {
     margin: 0;
     padding: 0;
@@ -45,7 +61,17 @@
 
 <div class="hint">touch and move words · listen</div>
 
-<script>
+<script>let audioContext;
+let unlocked = false;
+
+function unlockAudio() {
+  if (unlocked) return;
+  audioContext = new (window.AudioContext || window.webkitAudioContext)();
+  audioContext.resume();
+  unlocked = true;
+}
+
+document.addEventListener("pointerdown", unlockAudio, { once: true });
 /* ===== Poem text ===== */
 const poem = `
 Tell me who you are now
